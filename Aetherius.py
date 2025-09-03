@@ -10,6 +10,7 @@ import threading
 import queue
 import sys
 from concurrent.futures import ThreadPoolExecutor
+import random
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
@@ -45,6 +46,32 @@ ascii_art = """
 """
 print(ascii_art)
 
+use_proxies = False
+
+proxy_list = [
+    'http://156.228.104.102:3129',
+    'http://156.228.92.202:3129',
+    'http://156.228.111.198:3129',
+    'http://156.228.0.104:3129',
+    'http://156.242.45.146:3129',
+    'http://154.213.195.153:3129',
+    'http://154.213.163.159:3129',
+    'http://154.213.160.132:3129',
+    'http://156.228.94.130:3129',
+    'http://156.248.80.136:3129',
+]
+
+def get_proxy():
+    """Función para obtener un proxy aleatorio de la lista si use_proxies es True."""
+    global use_proxies
+    if use_proxies and proxy_list:
+        proxy_url = random.choice(proxy_list)
+        return {
+            'http': proxy_url,
+            'https': proxy_url
+        }
+    return None
+
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -69,6 +96,12 @@ class App(ctk.CTk):
         
         self.url_entry = ctk.CTkEntry(self.header_frame, placeholder_text="Ingrese la URL objetivo (ej. https://ejemplo.com)", width=500)
         self.url_entry.grid(row=0, column=1, sticky="ew", padx=10, pady=(10, 5))
+        
+        # Opciones para el uso de proxies
+        self.proxy_switch = ctk.CTkSwitch(self.header_frame, text="Usar Proxies", command=self.toggle_proxies)
+        self.proxy_switch.grid(row=0, column=2, padx=20, pady=5, sticky="e")
+        
+        self.use_proxies = False
 
         # Panel para los botones de las opciones
         self.buttons_frame = ctk.CTkFrame(self, corner_radius=0)
@@ -115,6 +148,11 @@ class App(ctk.CTk):
         # Cola para la salida en segundo plano
         self.queue = queue.Queue()
         self.update_log()
+
+    def toggle_proxies(self):
+        global use_proxies
+        self.use_proxies = self.proxy_switch.get() == 1
+        use_proxies = self.use_proxies
 
     def update_log(self):
         while not self.queue.empty():
@@ -226,10 +264,12 @@ class App(ctk.CTk):
 
 def fuzz_url(target_url, directories, log_func):
     log_func(f"\n--- Iniciando Fuzzing en {target_url} ---")
+    
     for directory in directories:
+        proxies = get_proxy()
         url = f"{target_url}/{directory}"
         try:
-            response = requests.get(url, timeout=5)
+            response = requests.get(url, proxies=proxies, timeout=5)
             if response.status_code == 200:
                 log_func(f"[+] Encontrado: {url} (Código de estado: {response.status_code})")
             elif response.status_code == 403:
@@ -243,8 +283,9 @@ def fuzz_url(target_url, directories, log_func):
 
 def get_directories_from_html(target_url, log_func):
     log_func(f"\n--- Analizando HTML de {target_url} ---")
+    proxies = get_proxy()
     try:
-        respuesta = requests.get(target_url, timeout=10)
+        respuesta = requests.get(target_url, proxies=proxies, timeout=10)
         respuesta.raise_for_status()
         soup = BeautifulSoup(respuesta.text, 'html.parser')
 
@@ -267,8 +308,9 @@ def get_directories_from_html(target_url, log_func):
 
 def detect_http_headers(target_url, log_func):
     log_func("\n--- Detectando encabezados HTTP ---")
+    proxies = get_proxy()
     try:
-        respuesta = requests.get(target_url, timeout=10)
+        respuesta = requests.get(target_url, proxies=proxies, timeout=10)
         respuesta.raise_for_status()
         for key, value in respuesta.headers.items():
             log_func(f"{key}: {value}")
@@ -316,8 +358,9 @@ def run_nmap_scan(url, log_func):
         log_func(f"Error inesperado al ejecutar Nmap: {e}")
 
 def security_focused_osint(url, log_func):
+    proxies = get_proxy()
     try:
-        response = requests.get(url)
+        response = requests.get(url, proxies=proxies, timeout=10)
         response.raise_for_status()
         page_content = response.text
         soup = BeautifulSoup(page_content, 'html.parser')
@@ -434,10 +477,11 @@ def security_focused_osint(url, log_func):
         return None
 
 def analyze_robots_and_sitemap(url, log_func):
+    proxies = get_proxy()
     log_func("\n--- Análisis de robots.txt ---")
     robots_url = urljoin(url, "/robots.txt")
     try:
-        response = requests.get(robots_url, timeout=5)
+        response = requests.get(robots_url, proxies=proxies, timeout=5)
         if response.status_code == 200:
             log_func("Contenido de robots.txt:")
             disallowed_dirs = re.findall(r"Disallow:\s*(.*)", response.text)
@@ -454,7 +498,7 @@ def analyze_robots_and_sitemap(url, log_func):
     log_func("\n--- Análisis de sitemap.xml ---")
     sitemap_url = urljoin(url, "/sitemap.xml")
     try:
-        response = requests.get(sitemap_url, timeout=5)
+        response = requests.get(sitemap_url, proxies=proxies, timeout=5)
         if response.status_code == 200:
             log_func("Contenido de sitemap.xml:")
             soup = BeautifulSoup(response.text, 'xml')
@@ -471,9 +515,10 @@ def analyze_robots_and_sitemap(url, log_func):
 
 def check_subdomain(sub, domain, found_subdomains, log_func):
     """Función para ser ejecutada por cada hilo."""
+    proxies = get_proxy()
     sub_url = f"https://{sub}.{domain}"
     try:
-        response = requests.get(sub_url, timeout=3, allow_redirects=True)
+        response = requests.get(sub_url, proxies=proxies, timeout=3, allow_redirects=True)
         if response.status_code == 200:
             found_subdomains.append(sub_url)
             log_func(f"  [+] Subdominio encontrado: {sub_url}")
@@ -501,8 +546,24 @@ def enumerate_subdomains(url, log_func):
 
 def run_cli_mode():
     """Ejecuta el programa en modo de terminal."""
+    global use_proxies
     
     print(ascii_art)
+    
+    # Pregunta al usuario si desea usar proxies
+    while True:
+        respuesta_proxies = input("¿Deseas usar proxies? (si/no): ").strip().lower()
+        if respuesta_proxies in ["si", "s"]:
+            use_proxies = True
+            print("Proxies activados.")
+            break
+        elif respuesta_proxies in ["no", "n"]:
+            use_proxies = False
+            print("Proxies desactivados.")
+            break
+        else:
+            print("Respuesta no válida. Por favor, responde 'si' o 'no'.")
+    
     print("Modo de terminal activado. Escribe 'ayuda' para ver las opciones o 'salir' para terminar.")
     
     def cli_log(text):
