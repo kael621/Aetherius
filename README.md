@@ -4,3 +4,4 @@ para usar la interfaz grafica use "python3 Aetherius.py --gui"
 esta herramienta puede servir tanto para hackers como para paginas que quieran probar su seguridad
 la herramienta manda una solicitud.get,obtiene el codigo html y lo filtra para obtener informacion como numeros de telefono,correos electronicos,directorios,etc
 al que guste modificarlo es libre de hacerlo favor de dar creditos al creador del script
+![Atherius img](https://github.com/user-attachments/assets/1a66aab8-7496-4dc6-9aef-85b7ea31f6af)
