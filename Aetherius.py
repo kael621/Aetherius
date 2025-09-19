@@ -48,7 +48,7 @@ dX.    9Xb      .dXb    __                         __    dXb.     dXP     .Xb
 | | | |  __/ |_| | | |  __/ |  | | |_| \__ \      | |\  \ | | (_| | | | | | (_) | | | |
 \_| |_/\___|\__|_| |_|____|_|  |_|____|____/      \_| \_/_|  \__,_|_| |_|_|\___/|_| |_|
 
-herramienta de seguridad,los creadores del script del grupo A-01
+herramienta de seguridad,los creadores del script del grupo error-403
 no nos hacemos responsables por el mal uso del script,favor de solo usarlo
 en sus propios servicios                                                                                                                           ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 """
@@ -1188,3 +1188,4 @@ if __name__ == "__main__":
         app.mainloop()
     else:
         run_cli_mode()
+
