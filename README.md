@@ -1,4 +1,5 @@
 # Aetherius
+para instalar las dependencias usen este comando "pip install requests beautifulsoup4 customtkinter pillow pypdf2 validators"
 Aetherius  es una herramienta de osint web aplica tecnicas de web scrapper,fuzzing,extrae subdominios,busca vulneravilidades,etc
 para usar la interfaz grafica use "python3 Aetherius-Kranion.py --gui"
 esta herramienta puede servir tanto para hackers como para paginas que quieran probar su seguridad
